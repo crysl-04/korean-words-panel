@@ -51,6 +51,13 @@ td{padding:6px 8px;border-top:1px solid #eaf1f8}
 tr:nth-child(even) td{background:#f8fbfe}
 td.no{color:#a8bbcd;width:40px;text-align:center}
 td.ko{font-weight:700}
+td.ko a.dic{color:inherit;text-decoration:none;border-bottom:1px dotted #b9cbdd;cursor:pointer}
+td.ko a.dic:hover{color:var(--blue);border-bottom-color:var(--blue)}
+td.ko a.dic::after{content:"↗";font-size:10px;color:#c3d3e3;margin-left:3px;font-weight:400}
+td.ko a.dic:hover::after{color:var(--blue)}
+#nohit{background:#fff;border-radius:12px;padding:18px;text-align:center;color:#7d93a8;font-size:14px;box-shadow:0 1px 3px rgba(40,60,90,.07)}
+#nohit a{color:var(--blue);text-decoration:none;font-weight:700}
+#nohit a:hover{text-decoration:underline}
 td.ko .rom{font-size:11px;color:#8ba0b5;font-weight:400;line-height:1.25;margin-top:1px;letter-spacing:.2px}
 body.norom td.ko .rom{display:none}
 td.zh{color:#41566b}
@@ -90,6 +97,7 @@ footer{text-align:center;color:#a5b6c6;font-size:12px;padding:10px 0 30px}
 <span class="stat" id="stat"></span>
 </div>
 <div id="units"></div>
+<div id="nohit" style="display:none"></div>
 <footer>
 <div class="pbooks">🖨 打印版背诵本：<a href="book1.html">第1册</a><a href="book2.html">第2册</a><a href="book3.html">第3册</a><a href="book4.html">第4册</a><a href="book5.html">第5册</a><a href="book6.html">第6册</a></div>
 延世韩国语 1–6 册 · 共 <span id="tot"></span> 条 · 与每日课件词汇同步
@@ -131,7 +139,7 @@ function unitHtml(u,bi){
   const ws=u.words, d=ws.filter(w=>isOn(bi+'-'+w[2])).length;
   let rows='';
   for(let i=0;i<ws.length;i++){const w=ws[i];
-    rows+=`<tr data-k="${bi}-${w[2]}"><td class="no">${i+1}</td><td class="ko">${esc(w[0])}${w[3]?`<div class="rom">${esc(w[3])}</div>`:''}</td><td class="zh">${esc(w[1])}</td><td class="st"><span class="tick${isOn(bi+'-'+w[2])?' done':''}">✓</span></td></tr>`;}
+    rows+=`<tr data-k="${bi}-${w[2]}"><td class="no">${i+1}</td><td class="ko"><a class="dic" href="https://zh.dict.naver.com/#/search?query=${encodeURIComponent(w[0])}" target="_blank" rel="noopener" title="在 Naver 韩-中词典查看">${esc(w[0])}</a>${w[3]?`<div class="rom">${esc(w[3])}</div>`:''}</td><td class="zh">${esc(w[1])}</td><td class="st"><span class="tick${isOn(bi+'-'+w[2])?' done':''}">✓</span></td></tr>`;}
   return `<div class="unit${(typeof unitOpen[bi]==='undefined'?bi===1:unitOpen[bi])?' open':''}" data-u="${bi}">
     <div class="uh"><span class="chev">▶</span><span class="ut">第 ${bi} 课 · ${esc(u.ko)} ${u.zh}</span><span class="us">제${bi}과</span><span class="ubadge">已背 ${d} / ${ws.length}</span></div>
     <div class="ubody"><table><thead><tr><th style="width:40px;text-align:center">#</th><th>韩文</th><th>中文</th><th style="width:46px;text-align:center">✓</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
@@ -159,6 +167,7 @@ function paintCounts(){
 }
 function applySearch(){
   const q=$('#q').value.trim().toLowerCase();
+  let total=0;
   document.querySelectorAll('#units .unit').forEach(el=>{
     let n=0;
     el.querySelectorAll('tbody tr').forEach(tr=>{
@@ -166,7 +175,12 @@ function applySearch(){
       tr.style.display=hit?'':'none';tr.classList.toggle('hit',!!q&&hit);
       if(hit)n++;});
     el.style.display=n?'':'none';
-    if(q&&n)el.classList.add('open');});
+    if(q&&n)el.classList.add('open');
+    total+=n;});
+  const nh=$('#nohit');
+  if(q&&!total){nh.style.display='';
+    nh.innerHTML=`本词库（4160 词）里没有「${esc(q)}」——去词典查：<a href="https://zh.dict.naver.com/#/search?query=${encodeURIComponent(q)}" target="_blank" rel="noopener">Naver 韩-中词典 ↗</a>　<a href="https://krdict.korean.go.kr/chn/dicSearch/search?nation=chn&mainSearchWord=${encodeURIComponent(q)}" target="_blank" rel="noopener">国立国语院基础词典 ↗</a>`;}
+  else nh.style.display='none';
 }
 function bind(){
   $('#ov').onclick=e=>{const c=e.target.closest('.ovc');if(c){cur=+c.dataset.b;localStorage.setItem('wb-book',cur);unitOpen={};renderBook();}};
